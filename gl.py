@@ -1,7 +1,6 @@
 import struct
 from collections import namedtuple
-import numpy as np
-
+import lpmath as lpm
 from math import cos, sin, tan, pi
 
 from obj import Obj
@@ -117,26 +116,25 @@ class Raytracer(object):
 
         material = intersect.sceneObj.material
 
-        finalColor = np.array([0,0,0])
-        objectColor = np.array([material.diffuse[0],
+        finalColor = [0,0,0]
+        objectColor = [material.diffuse[0],
                                 material.diffuse[1],
-                                material.diffuse[2]])
+                                material.diffuse[2]]
 
-        dirLightColor = np.array([0,0,0])
-        ambLightColor = np.array([0,0,0])
+        dirLightColor = [0,0,0]
+        ambLightColor = [0,0,0]
 
 
         for light in self.lights:
             if light.lightType == 0: # directional light
-                diffuseColor = np.array([0,0,0])
-
-                light_dir = np.array(light.direction) * -1
-                intensity = np.dot(intersect.normal, light_dir)
+                diffuseColor = [0,0,0]
+                light_dir = [r*-1 for r in list(light.direction)]
+                intensity = lpm.productoPunto(intersect.normal, light_dir)
                 intensity = float(max(0, intensity))
 
-                diffuseColor = np.array([intensity * light.color[0] * light.intensity,
+                diffuseColor = [intensity * light.color[0] * light.intensity,
                                          intensity * light.color[1] * light.intensity,
-                                         intensity * light.color[2] * light.intensity])
+                                         intensity * light.color[2] * light.intensity]
 
                 #Shadows
                 shadow_intensity = 0
@@ -144,15 +142,15 @@ class Raytracer(object):
                 if shadow_intersect:
                     shadow_intensity = 1
 
-
-                dirLightColor = np.add(dirLightColor, diffuseColor * (1 - shadow_intensity))
+                dirLightColor = lpm.suma_o_resta_vectores(dirLightColor, [a*(1-shadow_intensity) for a in diffuseColor])
 
             elif light.lightType == 2: # ambient light
-                ambLightColor = np.array(light.color) * light.intensity
+                ambLightColor = [a*light.intensity for a in light.color]
 
-        finalColor = dirLightColor + ambLightColor
+        finalColor = lpm.suma_o_resta_vectores(dirLightColor, ambLightColor)
 
-        finalColor *= objectColor
+
+        finalColor = [a*b for a, b in zip(finalColor, objectColor)]
 
         r = min(1, finalColor[0])
         g = min(1, finalColor[1])
@@ -172,14 +170,14 @@ class Raytracer(object):
                 Py = ((y + 0.5 - self.vpY) / self.vpHeight) * 2 - 1
 
                 # Proyeccion
-                t = tan((self.fov * np.pi / 180) / 2) * self.nearPlane
+                t = tan((self.fov * pi / 180) / 2) * self.nearPlane
                 r = t * self.vpWidth / self.vpHeight
 
                 Px *= r
                 Py *= t
 
                 direction = V3(Px, Py, -self.nearPlane)
-                direction = direction / np.linalg.norm(direction)
+                direction = lpm.normalizaVector(direction)
 
                 rayColor = self.cast_ray(self.camPosition, direction)
 

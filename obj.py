@@ -23,13 +23,3 @@ class Obj(object):
                 self.normals.append( list(map(float, value.split(' '))))
             elif prefix == 'f':
                 self.faces.append([  list(map(int, vert.split('/'))) for vert in value.split(' ')] )
-
-       
-
-
-            
-
-
-
-
-        
